@@ -52,7 +52,15 @@ Before the polynomial fit, the global coordinates provided by the simulator were
 
 The simulation had a 100 milisecond latency between actuations commands (on top of the connection latency).  This increases the difficulty to stabilize the trajectory of the car via the actuators, and thus the optimization problem has to take this into account and try to take it into account.
 
-Firstly we have added a threshold to the x position of the car (x+4), so the models are calculating the actuators based on this advanced position, sencondly some of the cost functions have been altered and new ones added to take this into account.
+In a normal scenario we could calculate the actuators at time 't' and then applied them at time 't+1',  but in this case there is a delay on 100ms so that these actuators are applied at around 't+2' instead (this is because our dt is 0.1).  This delay would make the model to not accurately optimize the actuators and their response in a realistic scenario, so we need to take into account this latency when defining the model.
+The way it's implemented is by using the actuators from 2 steps earlier instead of the previous step.
+
+```
+delta0 = vars[delta_start + t - 2];
+a0 = vars[a_start + t - 2];    
+```
+
+Additionally some of the cost functions have been altered and new ones added to take this into account.
 - Added more weight to the cross track erros and psi errors
 - Minimization of the use of actuators, adding additional weight to the delta variations (so that deltas are balanced on subsequent N steps)
 - Minimizations of gaps in sequential actuations
